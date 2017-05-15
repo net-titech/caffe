@@ -92,6 +92,8 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   bool bias_term_;
   bool is_1x1_;
   bool force_nd_im2col_;
+  Dtype pruning_threshold_; // parameter for DeepCompression. If not zero, weights having a value lower than this will be set to zero
+  vector<shared_ptr<Blob<Dtype> > > masks_;
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists

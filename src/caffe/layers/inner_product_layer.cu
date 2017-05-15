@@ -11,11 +11,15 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const Dtype* weight;
+  const Dtype* weight = this->blobs_[0]->gpu_data();;
   if(this->phase_==TRAIN && pruning_threshold_!=0){
-  	caffe_gpu_prune(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(), pruning_threshold_);
+     caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(), 
+           this->masks_[0]->mutable_gpu_data(), pruning_threshold_);
+     if(bias_term_){
+        caffe_gpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_gpu_data(), 
+           this->masks_[1]->mutable_gpu_data(), pruning_threshold_); 
+     } 
   }
-  weight = this->blobs_[0]->gpu_data();
   if (M_ == 1) {
     caffe_gpu_gemv<Dtype>(CblasNoTrans, N_, K_, (Dtype)1.,
                          weight, bottom_data, (Dtype)0., top_data);
@@ -75,6 +79,15 @@ void InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
          (Dtype)1., top_diff, this->blobs_[0]->gpu_data(),
          (Dtype)0., bottom[0]->mutable_gpu_diff());
     }
+  if(pruning_threshold_!=(Dtype)0.){
+      //LOG(INFO) << "pruning weights below: "<<pruning_threshold_;
+      caffe_gpu_mul<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
+        this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
+      if(bias_term_ && this->param_propagate_down_[1]){
+        caffe_gpu_mul<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
+          this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());           
+        }
+    }  
   }
 }
 

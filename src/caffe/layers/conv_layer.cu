@@ -7,6 +7,12 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  if(this->phase_==TRAIN && this->pruning_threshold_!=0){
+     caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(), this->pruning_threshold_);
+     if(this->bias_term_){
+        caffe_gpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_gpu_data(), this->pruning_threshold_); 
+     } 
+  }
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();

@@ -369,19 +369,20 @@ double caffe_cpu_asum<double>(const int n, const double* x) {
 }
 
 template <typename Dtype>
-void caffe_cpu_prune(const int n, Dtype* X, const Dtype threshold){
+void caffe_cpu_prune(const int n, Dtype* X, Dtype* mask,const Dtype threshold){
   for(int i=0; i<n; i++){
       if(X[i]<threshold){
          X[i] = (Dtype)0.;
+         mask[i] = (Dtype)0.;
       }
   }
 }
 
 template
-void caffe_cpu_prune<float>(const int n, float* X, const float threshold);
+void caffe_cpu_prune<float>(const int n, float* X, float* mask, const float threshold);
 
 template
-void caffe_cpu_prune<double>(const int n, double* X, const double threshold);
+void caffe_cpu_prune<double>(const int n, double* X, double* mask, const double threshold);
 
 template <>
 void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,

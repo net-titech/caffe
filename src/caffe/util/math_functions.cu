@@ -147,19 +147,22 @@ void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
 }
 
 template <typename Dtype>
-__global__ void prune_kernel(const int n, Dtype* X, const Dtype threshold) {
+__global__ void prune_kernel(const int n, Dtype* X, Dtype* mask, const Dtype threshold) {
   CUDA_KERNEL_LOOP(index, n) {
-    X[index] = X[index]<threshold?(Dtype)0. : X[index];
+    if(X[index]<threshold?(Dtype)){
+      X[index] = (Dtype)0.;
+      mask[index] = (Dtype)0.;
+    }
   }
 }
 
 template <>
-void caffe_gpu_prune<float>(const int n, float* X, const float threshold){
+void caffe_gpu_prune<float>(const int n, const float* X, const float threshold){
   prune_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(n, X, threshold);
 }
 
 template <>
-void caffe_gpu_prune<double>(const int n, double* X, const double threshold){
+void caffe_gpu_prune<double>(const int n, const double* X, const double threshold){
   prune_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(n, X, threshold);
 }
 

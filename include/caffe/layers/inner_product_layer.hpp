@@ -45,7 +45,9 @@ class InnerProductLayer : public Layer<Dtype> {
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
   bool transpose_;  ///< if true, assume transposed weights
-  Dtype pruning_threshold_;
+  Dtype pruning_threshold_; // parameter for DeepCompression. If not zero, weights having a value lower than this will be set to zero
+  bool prune_; 
+  vector<shared_ptr<Blob<Dtype> > > masks_;
 };
 
 }  // namespace caffe

@@ -24,6 +24,18 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+/* TODO fix this pruning code
+  if(this->pruning_threshold_!=(Dtype)0.){
+	//LOG(INFO) << "pruning weights below: "<<pruning_threshold_;
+      caffe_cpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_cpu_data(),
+        this->masks_[1]->mutable_cpu_data(), this->pruning_threshold_); 
+      if(this->bias_term_){
+          caffe_cpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_cpu_data(), 
+              this->masks_[1]->mutable_cpu_data(), this->pruning_threshold_); 
+      }
+  }
+*/
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -68,6 +80,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               bottom_diff + n * this->bottom_dim_);
         }
       }
+     //TODO multipicate gradient vector by masks_
     }
   }
 }
