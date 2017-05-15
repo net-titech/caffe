@@ -108,6 +108,10 @@ Dtype caffe_cpu_strided_dot(const int n, const Dtype* x, const int incx,
 template <typename Dtype>
 Dtype caffe_cpu_asum(const int n, const Dtype* x);
 
+//weights which are less than the threshold are set tp zero
+template <typename Dtype>
+void caffe_cpu_prune(const int n, Dtype* X, const Dtype threshold);
+
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
 template<typename Dtype>
@@ -244,6 +248,9 @@ void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
 
 template <typename Dtype>
 void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_prune(const int n, Dtype* X, const Dtype threshold);
 
 template<typename Dtype>
 void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);

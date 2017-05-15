@@ -12,6 +12,8 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int num_output = this->layer_param_.inner_product_param().num_output();
   bias_term_ = this->layer_param_.inner_product_param().bias_term();
   transpose_ = this->layer_param_.inner_product_param().transpose();
+  pruning_threshold_ = this->layer_param_.pruning_param().threshold();
+  DCHECK(pruning_threshold_ >= (Dtype)0.);
   N_ = num_output;
   const int axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
@@ -49,6 +51,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
           this->layer_param_.inner_product_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
+
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
@@ -85,11 +88,17 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
+  if(pruning_threshold_!=(Dtype)0.){
+	//LOG(INFO) << "pruning weights below: "<<pruning_threshold_;
+  	caffe_cpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_cpu_data(), pruning_threshold_);
+  }
   caffe_cpu_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
       M_, N_, K_, (Dtype)1.,
-      bottom_data, weight, (Dtype)0., top_data);
-  if (bias_term_) {
+      bottom_data, this->blobs_[0]->cpu_data(), (Dtype)0., top_data);
+   if (bias_term_) {
+    if(pruning_threshold_!=(Dtype)0.){
+        caffe_cpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_cpu_data(), pruning_threshold_);	
+    }
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
         bias_multiplier_.cpu_data(),
         this->blobs_[1]->cpu_data(), (Dtype)1., top_data);
@@ -104,6 +113,7 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     const Dtype* bottom_data = bottom[0]->cpu_data();
     // Gradient with respect to weight
+
     if (transpose_) {
       caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans,
           K_, N_, M_,
@@ -138,6 +148,23 @@ void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., bottom[0]->mutable_cpu_diff());
     }
   }
+  if(pruning_threshold_!=(Dtype)0.){
+	//LOG(INFO) << "pruning weights below: "<<pruning_threshold_;
+        //caffe_cpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_cpu_data(), pruning_threshold_);
+
+        if(bias_term_){
+           //caffe_cpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_cpu_data(), pruning_threshold_);
+           //TODO only for testing
+           int screw_count = 0;
+           const Dtype* weights = this->blobs_[1]->cpu_data();
+           for(int i=0; i<this->blobs_[1]->count(); i++){
+               if(weights[i]==(Dtype)0.){
+                   screw_count++;
+               }
+           }
+           LOG(INFO) << "zero count: "<<screw_count;
+        }
+    }
 }
 
 #ifdef CPU_ONLY

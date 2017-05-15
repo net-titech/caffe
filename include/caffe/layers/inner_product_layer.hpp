@@ -45,6 +45,7 @@ class InnerProductLayer : public Layer<Dtype> {
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
   bool transpose_;  ///< if true, assume transposed weights
+  Dtype pruning_threshold_;
 };
 
 }  // namespace caffe
