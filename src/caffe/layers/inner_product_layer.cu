@@ -78,17 +78,16 @@ void InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           M_, K_, N_,
          (Dtype)1., top_diff, this->blobs_[0]->gpu_data(),
          (Dtype)0., bottom[0]->mutable_gpu_diff());
-    }
-  if(pruning_threshold_!=(Dtype)0.){
-      //LOG(INFO) << "pruning weights below: "<<pruning_threshold_;
-      caffe_gpu_mul<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
-        this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
-      if(bias_term_ && this->param_propagate_down_[1]){
-        caffe_gpu_mul<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
-          this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());           
-        }
-    }  
+    } 
   }
+  if(prune_) {
+    caffe_gpu_mul<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
+      this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
+    if(bias_term_ && this->param_propagate_down_[1]){
+      caffe_gpu_mul<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
+        this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());           
+    }
+  } 
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(InnerProductLayer);

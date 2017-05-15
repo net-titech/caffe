@@ -59,11 +59,19 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
        this->masks_[0].reset(new Blob<Dtype>(weight_shape));
        caffe_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
           this->masks_[0]->mutable_cpu_data());
+       #ifndef CPU_ONLY
+       caffe_gpu_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
+          this->masks_[0]->mutable_gpu_data());
+       #endif // !CPU_ONLY
        if(bias_term_){
           vector<int> bias_shape(1, N_);
           this->masks_[1].reset(new Blob<Dtype>(bias_shape));
           caffe_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
               this->masks_[1]->mutable_cpu_data());
+          #ifndef CPU_ONLY
+          caffe_gpu_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
+              this->masks_[1]->mutable_gpu_data());
+          #endif // !CPU_ONLY
        }
     }
   }  // parameter initialization

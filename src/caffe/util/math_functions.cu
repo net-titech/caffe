@@ -149,7 +149,7 @@ void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
 template <typename Dtype>
 __global__ void prune_kernel(const int n, Dtype* X, Dtype* mask, const Dtype threshold) {
   CUDA_KERNEL_LOOP(index, n) {
-    if(X[index]<threshold?(Dtype)){
+    if(X[index]<threshold){
       X[index] = (Dtype)0.;
       mask[index] = (Dtype)0.;
     }
