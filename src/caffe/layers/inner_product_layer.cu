@@ -12,7 +12,7 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();;
-  if(this->phase_==TRAIN && pruning_threshold_!=0){
+  if(prune_){
      caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(), 
            this->masks_[0]->mutable_gpu_data(), pruning_threshold_);
      if(bias_term_){

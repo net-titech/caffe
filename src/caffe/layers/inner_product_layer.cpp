@@ -13,7 +13,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bias_term_ = this->layer_param_.inner_product_param().bias_term();
   transpose_ = this->layer_param_.inner_product_param().transpose();
   pruning_threshold_ = this->layer_param_.pruning_param().threshold();
-  prune_ = (this->phase_==TRAIN && pruning_threshold_!=(Dtype)0.);
+  prune_ = (pruning_threshold_!=(Dtype)0.);
   DCHECK(pruning_threshold_ >= (Dtype)0.);
   N_ = num_output;
   const int axis = bottom[0]->CanonicalAxisIndex(
@@ -54,28 +54,28 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
 
     }
-    if (prune_) {
-       this->masks_.resize(this->blobs_.size());
-       this->masks_[0].reset(new Blob<Dtype>(weight_shape));
-       caffe_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
-          this->masks_[0]->mutable_cpu_data());
-       #ifndef CPU_ONLY
-       caffe_gpu_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
-          this->masks_[0]->mutable_gpu_data());
-       #endif // !CPU_ONLY
-       if(bias_term_){
-          vector<int> bias_shape(1, N_);
-          this->masks_[1].reset(new Blob<Dtype>(bias_shape));
-          caffe_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
-              this->masks_[1]->mutable_cpu_data());
-          #ifndef CPU_ONLY
-          caffe_gpu_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
-              this->masks_[1]->mutable_gpu_data());
-          #endif // !CPU_ONLY
-       }
-    }
   }  // parameter initialization
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
+  if (prune_) {
+     this->masks_.resize(this->blobs_.size());
+     this->masks_[0].reset(new Blob<Dtype>(this->blobs_[0]->shape()));
+     caffe_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
+        this->masks_[0]->mutable_cpu_data());
+//     #ifndef CPU_ONLY
+//     caffe_gpu_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
+//        this->masks_[0]->mutable_gpu_data());
+//     #endif // !CPU_ONLY
+     if(bias_term_){
+        vector<int> bias_shape(1, N_);
+        this->masks_[1].reset(new Blob<Dtype>(this->blobs_[1]->shape()));
+        caffe_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
+            this->masks_[1]->mutable_cpu_data());
+//        #ifndef CPU_ONLY
+//        caffe_gpu_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
+//            this->masks_[1]->mutable_gpu_data());
+//        #endif // !CPU_ONLY
+     }
+  }
+ this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
 template <typename Dtype>
