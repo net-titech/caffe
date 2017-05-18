@@ -57,6 +57,9 @@ layer {
       type: "constant"
     }
   }
+  pruning_param {
+    threshold: 0.02
+  }
 }
 layer {
   name: "pool1"
@@ -98,6 +101,9 @@ layer {
     bias_filler {
       type: "constant"
     }
+  }
+  pruning_param {
+    threshold: 0.01
   }
 }
 layer {
@@ -141,6 +147,9 @@ layer {
       type: "constant"
     }
   }
+  pruning_param {
+    threshold: 0.01
+  }
 }
 layer {
   name: "relu3"
@@ -180,6 +189,9 @@ layer {
       type: "constant"
     }
   }
+  pruning_param {
+    threshold: 0.05
+  }
 }
 layer {
   name: "ip2"
@@ -201,6 +213,9 @@ layer {
     bias_filler {
       type: "constant"
     }
+  }
+  pruning_param {
+    threshold: 0.06
   }
 }
 layer {
