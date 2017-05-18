@@ -7,16 +7,10 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  if(this->phase_==TRAIN && this->pruning_threshold_!=0){
-     caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(), this->pruning_threshold_);
-     if(this->bias_term_){
-        caffe_gpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_gpu_data(), this->pruning_threshold_); 
-     } 
-  }
   if(this->prune_) {
-     caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(),
-        this->masks_[0]->mutable_gpu_data(), this->pruning_threshold_); 
-     if(this->bias_term_){
+    caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(),
+      this->masks_[0]->mutable_gpu_data(), this->pruning_threshold_); 
+      if(this->bias_term_){
         caffe_gpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_gpu_data(), 
           this->masks_[1]->mutable_gpu_data(), this->pruning_threshold_); 
       }
@@ -67,10 +61,11 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
   }
-  if(prune_) {
+
+  if(this->prune_) {
     caffe_gpu_mul<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
       this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
-    if(bias_term_ && this->param_propagate_down_[1]){
+    if(this->bias_term_ && this->param_propagate_down_[1]){
       caffe_gpu_mul<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
         this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());           
     }

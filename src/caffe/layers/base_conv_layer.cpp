@@ -14,7 +14,10 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   pruning_threshold_ = this->layer_param_.pruning_param().threshold();
-  prune_ = (this->phase_==TRAIN && pruning_threshold_!=(Dtype)0.);
+  prune_ = (pruning_threshold_!=(Dtype)0.);
+  if(prune_) {
+    LOG(INFO)<<"threshold pruning enabled";
+  }
   force_nd_im2col_ = conv_param.force_nd_im2col();
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = channel_axis_ + 1;
@@ -176,26 +179,18 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
-  }
-  if(prune_) {
-    this->masks_.resize(this->blobs_.size());
-    this->masks_[0].reset(new Blob<Dtype>(weight_shape));
-    caffe_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
-       this->masks_[0]->mutable_cpu_data());
-    #ifndef CPU_ONLY
-    caffe_gpu_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
-       this->masks_[0]->mutable_gpu_data());
-    #endif // !CPU_ONLY
-    if(bias_term_) {
-       this->masks_[1].reset(new Blob<Dtype>(bias_shape));
-       caffe_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
-         this->masks_[1]->mutable_cpu_data());
-       #ifndef CPU_ONLY
-       caffe_gpu_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
-         this->masks_[1]->mutable_gpu_data());
-       #endif // !CPU_ONLY
-    }
-  }
+   }
+   if(prune_) {
+        this->masks_.resize(this->blobs_.size());
+        this->masks_[0].reset(new Blob<Dtype>(weight_shape));
+        caffe_set<Dtype>(this->blobs_[0]->count(), (Dtype)1.,
+          this->masks_[0]->mutable_cpu_data());
+        if(bias_term_) {
+          this->masks_[1].reset(new Blob<Dtype>(bias_shape));
+          caffe_set<Dtype>(this->blobs_[1]->count(), (Dtype)1.,
+            this->masks_[1]->mutable_cpu_data());
+        }    
+     }
   kernel_dim_ = this->blobs_[0]->count(1);
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
   // Propagate gradients to the parameters (as directed by backward pass).

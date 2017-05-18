@@ -76,7 +76,6 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               bottom_diff + n * this->bottom_dim_);
         }
       }
-     //TODO multipicate gradient vector by masks_
     }
   }
   if(this->prune_) {

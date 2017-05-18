@@ -371,7 +371,7 @@ double caffe_cpu_asum<double>(const int n, const double* x) {
 template <typename Dtype>
 void caffe_cpu_prune(const int n, Dtype* X, Dtype* mask,const Dtype threshold){
   for(int i=0; i<n; i++){
-      if(X[i]<threshold){
+      if(std::abs(X[i])<threshold){
          X[i] = (Dtype)0.;
          mask[i] = (Dtype)0.;
       }

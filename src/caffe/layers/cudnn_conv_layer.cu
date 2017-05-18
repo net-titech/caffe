@@ -10,6 +10,15 @@ __global__ void sync_conv_groups() { }
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  if(this->prune_) {
+    caffe_gpu_prune<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->mutable_gpu_data(),
+      this->masks_[0]->mutable_gpu_data(), this->pruning_threshold_);
+    if(this->bias_term_){
+      caffe_gpu_prune<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->mutable_gpu_data(),
+        this->masks_[1]->mutable_gpu_data(), this->pruning_threshold_);
+    }
+}
+
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -109,6 +118,14 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
+  }
+  if(this->prune_) {
+    caffe_gpu_mul<Dtype>(this->blobs_[0]->count(), this->blobs_[0]->gpu_diff(),
+      this->masks_[0]->gpu_data(), this->blobs_[0]->mutable_gpu_diff());
+    if(this->bias_term_ && this->param_propagate_down_[1]){
+      caffe_gpu_mul<Dtype>(this->blobs_[1]->count(), this->blobs_[1]->gpu_diff(),
+        this->masks_[1]->gpu_data(), this->blobs_[1]->mutable_gpu_diff());
+    }
   }
 }
 
