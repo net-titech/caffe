@@ -5,12 +5,14 @@ Takes as arguments:
 3. prunning ratio: what percentage of weights need to be pruned from convolution and fully-connected layers (eg: if this vaue is 30, 30% smallest weights will be set to zero, leaving only 70% of the weights)
 4. the path to output prototxt file
 
+Output:
+A prototext file with pruning_param mentioned.
 """
 
 import numpy as np
 import sys
 
-caffe_root = '../../'  ## this file should be run from {caffe_root} (otherwise change this line)
+caffe_root = '../../'  ## this file should be run from {caffe_root}/examples/threshold_pruning (otherwise change this line)
 sys.path.insert(0, caffe_root + 'python')
 
 import caffe
