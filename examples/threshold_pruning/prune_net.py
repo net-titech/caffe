@@ -33,7 +33,7 @@ if prune_threshold <= 0 or prune_threshold >=100:
 
 caffe.set_mode_cpu()
 
-net = caffe.Net(model_def, model_weights, caffe.TEST) 
+net = caffe.Net(model_def, model_weights, caffe.TEST)
 pruned_net = caffe_pb2.NetParameter()
 
 with open(model_def) as mf:
@@ -45,7 +45,7 @@ for lname in lnames:
   layer_type = net.layer_dict[lname].type
   if layer_type == 'Convolution' or layer_type == 'InnerProduct':
     weights = np.abs(net.params[lname][0].data)
-    threshold = np.percentile(weights, 100.0-prune_threshold)
+    threshold = np.percentile(weights, 100.0)
     pruned_net.layer[lnames.index(lname)].pruning_param.threshold = threshold
 
 with open(output_file, 'w') as f:
