@@ -45,7 +45,7 @@ for lname in lnames:
   layer_type = net.layer_dict[lname].type
   if layer_type == 'Convolution' or layer_type == 'InnerProduct':
     weights = np.abs(net.params[lname][0].data)
-    threshold = np.percentile(weights, 100.0)
+    threshold = np.percentile(weights, prune_threshold)
     pruned_net.layer[lnames.index(lname)].pruning_param.threshold = threshold
 
 with open(output_file, 'w') as f:
